@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+  projects  Project[]
+}
+
+model Project {
+  id        String    @id @default(cuid())
+  name      String
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id])
+  userId    String
+  envs      Environment[]
+}
+
+model Environment {
+  id         String   @id @default(cuid())
+  name       String
+  project    Project  @relation(fields: [projectId], references: [id])
+  projectId  String
+  flags      Flag[]
+}
+
+model Flag {
+  id            String   @id @default(cuid())
+  key           String
+  description   String?
+  enabled       Boolean  @default(false)
+  percentage    Int      @default(0) // 0..100
+  variantJson   Json?
+  environment   Environment @relation(fields: [environmentId], references: [id])
+  environmentId String
+  segments      Segment[]
+  audits        AuditLog[]
+}
+
+model Segment {
+  id        String @id @default(cuid())
+  name      String
+  // simple attribute match: key=value
+  ruleKey   String
+  ruleValue String
+  flags     Flag[]
+}
+
+model EvaluationEvent {
+  id            String   @id @default(cuid())
+  flagKey       String
+  userId        String
+  environmentId String
+  createdAt     DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  flagId    String
+  message   String
+  createdAt DateTime @default(now())
+  flag      Flag     @relation(fields: [flagId], references: [id])
+}
+
+model DailyRollup {
+  id            String   @id @default(cuid())
+  environmentId String
+  flagKey       String
+  date          DateTime
+  evaluations   Int
+  @@unique([environmentId, flagKey, date])
+}

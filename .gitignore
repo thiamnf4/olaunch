@@ -1,0 +1,12 @@
+# Node
+node_modules
+dist
+.next
+coverage
+.env
+.env.*
+pnpm-lock.yaml
+.DS_Store
+.idea
+.vscode
+docker-data/
